@@ -29,11 +29,10 @@
       :fields="fields"
     ></b-table>
     <b-pagination
-      v-on:input="myClickedEventhandler"
+      v-on:input="getNewPageData"
       v-model="currentPage"
       :total-rows="drillCoreDataCount"
       :per-page="100"
-      aria-controls="my-table"
     ></b-pagination>
   </div>
 </template>
@@ -55,7 +54,7 @@ export default {
   },
 
   methods: {
-    myClickedEventhandler(newPage) {
+    getNewPageData(newPage) {
       this.getDrillCoreData(newPage);
       window.scrollTo(0, 0);
     },
