@@ -1,4 +1,4 @@
-# taltech-konkurs
+# taltech-konkurss
 
 ## Project setup
 ```
