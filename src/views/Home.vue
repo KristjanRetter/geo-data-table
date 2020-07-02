@@ -1,121 +1,99 @@
 <template>
-  <div  class="home">
-    <img alt="Vue logo" src="../assets/logo.png" />
-     <b-form @submit="onSubmit" >
-      <b-form-group  v-for="input in testForm" :key="input.lable"  :label="input.lable">
-        <b-form-input
-      
-          v-model="input.locality_ids"
-          :placeholder="input.placeholder"
-        ></b-form-input>
+  <div class="home">
+    <b-form @submit="onSubmit" @reset="onReset">
+      <b-form-group v-for="input in form" :key="input.key" :label="input.lable">
+        <b-form-input v-model="input.value" :placeholder="input.placeholder"></b-form-input>
       </b-form-group>
-
-
-      <b-form-group  label="Id:">
-        <b-form-input
-    
-          v-model="form.locality_id"
-          placeholder="Enter location id"
-        ></b-form-input>
-      </b-form-group>
-       <b-form-group label="Location Country:">
-        <b-form-input
-         
-          v-model="form.locality__country__value_en"
-          placeholder="Enter country"
-        ></b-form-input>
-      </b-form-group>
-       <b-form-group label="Location Debth:">
-        <b-form-input
-     
-          v-model="form.locality__depth"
-          placeholder="Enter location id"
-        ></b-form-input>
-      </b-form-group>
+       <b-button type="reset" variant="secondary">Reset</b-button>
       <b-button type="submit" variant="primary">Submit</b-button>
+           
     </b-form>
-
-    <b-table v-if="drillCoreData" striped hover :items="drillCoreData" :fields= "drillCoreColumns"></b-table>
-  
-
+      <b-pagination
+      v-if="drillCoreData"
+      v-on:input="myClickedEventhandler"
+      v-model="currentPage"
+      :total-rows="drillCoreDataCount"
+      :per-page="100"
+      aria-controls="my-table"
+    ></b-pagination>
+    <b-table v-if="drillCoreData" striped hover :items="drillCoreData" :fields="drillCoreColumns"></b-table>
   </div>
 </template>
-
 <script>
-
-
-
 export default {
   name: "Home",
-  components: {
-  },
- data() {
+  components: {},
+  data() {
     return {
+      suurus: "10",
+      filter: "",
+      currentPage: 1,
       drillCoreData: null,
-      drillCoreColumns: ["locality_id","drillcore_en","locality__country__value_en","depository__value_en","locality__depth","year", "storage__location"],
-      form: {
-          locality_id: null,
-          locality__country__value_en: null,
-          locality__depth: null,
-        },
-
-      testForm: [
+      drillCoreDataCount: null,
+      drillCoreColumns: [
+        "locality_id",
+        "drillcore_en",
+        "locality__country__value_en",
+        "depository__value_en",
+        "locality__depth",
+        "year",
+        "storage__location",
+      ],
+      form: [
         {
-       
+          lable: "Country",
+          placeholder: "Country",
+          key: "locality__country__value_en",
+          value: null,
+        },
+        {
+          lable: "Debth",
+          placeholder: "Debth",
+          key: "locality__depth",
+          value: null,
+        },
+        {
           lable: "Location Id",
-          placeholder: "Enter Location Id",
-          locality_ids: null,
-        },
-           {
-          lable: "Ugh",
-          placeholder: "Fancy",
-          locality_ids: null,
-        },
-           {
-          lable: "Location sId",
           placeholder: "mjauu",
-          locality_ids: null,
-        }
-      ]
-    }
+          key: "locality_id",
+          value: null,
+        },
+      ],
+    };
   },
 
-  methods:{
-     init(){
-      fetch('https://api.geocollections.info/drillcore/?fields=id,locality_id,drillcore_en,locality__depth,locality__country__value_en,depository__value_en,year,storage__location&paginate_by=10&page=1')
-      .then(response => response.json().then(data => this.drillCoreData = data.results))
-      .catch(err=> console.error(err));
+  methods: {
+    myClickedEventhandler(newPage) {
+      this.getData(newPage)
+      console.log(event)
     },
 
-     getbasedOnId(filter){
-       if(filter) {
-       const fields = "fields=id,locality_id,drillcore_en,locality__depth,locality__country__value_en,depository__value_en,year,storage__location"
-    console.log(filter)
-      fetch(`https://api.geocollections.info/drillcore/?${filter}${fields}`)
-      .then(response => response.json().then(data => this.drillCoreData = data.results))
-      .catch(err=> console.error(err));} else {
-         this.init()
-      }
+    getData(page=1) {
+   
+    const fields="fields=id,locality_id,drillcore_en,locality__depth,locality__country__value_en,depository__value_en,year,storage__location"
+      fetch(`https://api.geocollections.info/drillcore/?paginate_by=100&page=${page}&${this.filter}${fields}`)
+        .then((response) => response.json().then((data) => (this.drillCoreData = data.results, this.drillCoreDataCount = data.count)))
+        .catch((err) => console.error(err));
     },
-       onSubmit(evt) {
-        evt.preventDefault()
-        //
- 
-        const filters = [];
-
-        for (const property in this.form) {
-          if(this.form[property]) {
-            filters.push(`${property}=${this.form[property]}&`)
-          }
+    onReset() {
+      this.filter = ""
+      this.currentPage = 1;
+      this.getData();
+    },
+    onSubmit(evt) {
+      evt.preventDefault();
+      const filters = []
+      this.form.forEach((input) => {
+        if (input.value) {
+          filters.push(`${input.key}=${input.value}&`);
         }
-       this.getbasedOnId(filters.join(""))
-      }
-    
+      });
+      this.filter = filters.join("")
+      this.getData();
+    },
   },
-  mounted(){
-   this.init()
-   console.log(this.drillCoreData)
-    
-  }
+  mounted() {
+    this.getData();
+  },
 };
 </script>
